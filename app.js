@@ -35,7 +35,7 @@ client.on("guildMemberAdd", async (member) => {
 			`**, <@${member.user.id}>! You are our ` +
 			guild.memberCount +
 			`th coder! Please use the command \`\/verify {School Initials} {Full Name} {Participant | Organiser}\` in this chat to verify your identity before proceeding. An example would be \`\/confirm OJC Lim Ah Seng Participant\` for Lim Ah Seng, a participant from Original Junior College`
-			`th coder! Please use the command \`\/verify {School Initials} {Full Name} {Participant | Organiser}\` in this chat to verify your identity before proceeding. An example would be \`\/confirm OJC Lim Ah Seng Participant\` for Lim Ah Seng, a participant from Original Junior College **To sign up for workshops and events, kindly head over to https://go.buildingblocs.sg/signup to register for your tickets!**` // For during BBCs events
+			// `th coder! Please use the command \`\/verify {School Initials} {Full Name} {Participant | Organiser}\` in this chat to verify your identity before proceeding. An example would be \`\/confirm OJC Lim Ah Seng Participant\` for Lim Ah Seng, a participant from Original Junior College **To sign up for workshops and events, kindly head over to https://go.buildingblocs.sg/signup to register for your tickets!**` // For during BBCs events
 		);
 	  }, 1000);
 }); 
@@ -53,6 +53,10 @@ const slashCommands = [
 	new SlashCommandBuilder()
 		.setName('verify')
 		.setDescription('Verify your account. Usage: \/verify {School Initials} {Full Name} {Participant | Organiser}')
+		.addStringOption(option =>
+			option.setName('Input')
+				.setDescription('Input the info mentioned previously.')
+				.setRequired(true)),
 ]
 	.map(command => command.toJSON());
 
@@ -77,7 +81,7 @@ client.on('interactionCreate', async interaction => {
 	} else if (commandName === 'test') {
 		await interaction.reply({ content: `Hi! This is a test message that only you can see.`, ephemeral: true});
 	} else if (commandName === 'verify') {
-		await interaction.reply({ content: 'hi!', ephemeral: true });
+		await interaction.reply({ content: `${interaction.user.tag}`, ephemeral: true });
 	}
 
 });
