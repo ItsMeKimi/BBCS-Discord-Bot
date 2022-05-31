@@ -157,4 +157,12 @@ client.on('interactionCreate', async interaction => {
 
 });
 
+client.on('messageCreate', async (message) => {
+	messageContent = message.content
+	if (messageContent.startsWith('/verify')) {
+		await interaction.reply({ content: `Hi <@${interaction.user.id}>! Please.`, ephemeral: false })
+	}
+	console.log(messageContent)
+})
+
 client.login(botSecretToken);
