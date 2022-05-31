@@ -17,17 +17,16 @@ client.on("ready", () => {
 	client.user.setActivity("out for / commands", { type: "WATCHING" });
 	console.log("Bot Connected To Discord!");
 
-	const channel = client.channels.cache.get("980466966626197537")
+	const channel = client.channels.cache.get("980466966626197537") // To Change
 });
 
 // For Server Authentication
 client.on("guildMemberAdd", async (member) => {
+	console.log(`User Joined Guild with ID ${member.user.id}`)
+
 	let guild = member.guild;
 	// let memberTag = member.user.tag;
-	const channel = client.channels.cache.get("980466966626197537")
-
-	// Give them 'unverified' role.
-	member.roles.add('980840253222957138') // To change
+	const channel = client.channels.cache.get("980466966626197537") // To Change
 
 	setTimeout(() => {
 		channel.send(
@@ -53,10 +52,29 @@ const slashCommands = [
 	new SlashCommandBuilder()
 		.setName('verify')
 		.setDescription('Verify your account. Usage: \/verify {School Initials} {Full Name} {Participant | Organiser}')
-		.addStringOption(option =>
-			option.setName('input')
-				.setDescription('Input the info mentioned previously.')
-				.setRequired(true))
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('participant')
+				.setDescription('Verify as participant.')
+				.addStringOption(option =>
+					option
+						.setName('info')
+						.setDescription('{School Initials} {Full Name}')
+						.setRequired(true)
+				)
+				
+			)
+		.addSubcommand(subcommand =>
+			subcommand
+				.setName('organiser')
+				.setDescription('Verify as organiser.')
+				.addStringOption(option =>
+					option
+						.setName('info')
+						.setDescription('{School Initials} {Full Name}')
+						.setRequired(true)
+				)
+			),
 ]
 	.map(command => command.toJSON());
 
@@ -81,49 +99,61 @@ client.on('interactionCreate', async interaction => {
 	} else if (commandName === 'test') {
 		await interaction.reply({ content: `Hi! This is a test message that only you can see.`, ephemeral: true});
 	} else if (commandName === 'verify') {
-		const inputValue = interaction.options.data[0]['value']
+		const roleChoice = interaction.options.getSubcommand(); // participant or organiser
+		const inputValue = interaction.options.data[0]['options'][0]['value']; // custom input
 
-		if (inputValue) {
-			// Process the verification string
-			let splitCommand = inputValue.split(" ");
-			let schoolPortion = splitCommand[0];
-			let arguments = splitCommand.slice(1);
-			let namePortionArray = arguments.slice(0, -1);
-			let namePortion = ''
-			for (let i = 0; i < (namePortionArray.length); i++) {
-				if (i === namePortionArray.length - 1) {
-					namePortion += namePortionArray[i].toString()
-				} else {
-					namePortion += namePortionArray[i].toString() + ' ';
-				}
+		// get schoolPortion and namePortion from interaction
+		let splitCommand = inputValue.split(" ");
+
+		let schoolPortion = splitCommand[0];
+		let namePortionArray = splitCommand.slice(1);
+		let namePortion = ''
+		for (let i = 0; i < (namePortionArray.length); i++) {
+			if (i === namePortionArray.length - 1) {
+				namePortion += namePortionArray[i].toString();
+			} else {
+				namePortion += namePortionArray[i].toString() + ' ';
 			}
-			let rolePortion = arguments.slice(-1)[0]
-
+		};
+		let nickname = `${schoolPortion} ${namePortion}`
+		
+		// make sure theres at least school and one word name
+		if (splitCommand.length < 2) {
+			await interaction.reply({ content:`Error! Please ensure that you have written both your School Initials and your Full Name`, ephemeral: true });
+		} else {
 			if (schoolPortion.toUpperCase() === 'OJC') {
 				await interaction.reply({ content: `Hi <@${interaction.user.id}>! Please read the verification instructions carefully and not copy the example given. Feel free to message the OICs if you need any help.`, ephemeral: true });
 			} else if (inputValue.length > 32) {
 				await interaction.reply({ content: `Hi <@${interaction.user.id}>! the command you entered was too long. Please ensure that you have entered the right information. If possible, use a short form of your name. If not possible, feel free to message the OICs for further help.`, ephemeral: true });
-			} else if (rolePortion.toUpperCase() === 'PARTICIPANT' | rolePortion.toUpperCase() === 'ORGANISER') {
+			} else if (roleChoice.toUpperCase() === 'PARTICIPANT' | roleChoice.toUpperCase() === 'ORGANISER') {
 				await interaction.reply({ content: `Thank you <@${interaction.user.id}>! You can now access the other channels`, ephemeral: true });
 				setTimeout(() => {}, 3000)
-				// remove 'unverified' role
-				await interaction.member.roles.remove('980840253222957138'); // To change
 				// add 'verified' role
 				await interaction.member.roles.add('980840509654323222'); // To change
 				// add 'bbcs2022' role
 				await interaction.member.roles.add('980840703775092788'); // To change
-
-				if (rolePortion.toUpperCase() === 'PARTICIPANT') {
+				
+				if (roleChoice.toUpperCase() === 'PARTICIPANT') {
 					await interaction.member.roles.add('980840801435279360');
-				} else if (rolePortion.toUpperCase() === 'ORGANISER') {
+				} else if (roleChoice.toUpperCase() === 'ORGANISER') {
 					await interaction.member.roles.add('980840793705185340');
 				};
 
+				// In a try catch loop in case some member has higher roles than the bot
+				try {
+					await interaction.member.setNickname(nickname);
+					console.log(`SUCCESS: Renamed \'${interaction.user.username}\' ID: \'${interaction.user.id}\' to \'${nickname}\'`)
+				} catch (error) {
+					console.log(`ERROR: Renaming \'${interaction.user.username}\' ID: \'${interaction.user.id}\' to \'${nickname}\' failed. {Missing Permissions}`);
+				};
+				
 			} else {
 				await interaction.reply({ content: `Hi <@${interaction.user.id}>! There is an error somewhere in your input. Make sure everything you have typed is correct. If it still returns this error, feel free to message the OICs if you need any help.`, ephemeral: true });
-			}
+			};
+			
 		};
-	}
+
+	};
 
 });
 
