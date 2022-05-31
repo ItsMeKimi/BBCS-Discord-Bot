@@ -159,10 +159,13 @@ client.on('interactionCreate', async interaction => {
 
 client.on('messageCreate', async (message) => {
 	messageContent = message.content
+	const channel = client.channels.cache.get("980466966626197537") // To Change
+	
 	if (messageContent.startsWith('/verify')) {
-		await interaction.reply({ content: `Hi <@${interaction.user.id}>! Please.`, ephemeral: false })
+		message.send({ content: `Hi <@${interaction.user.id}>! Please.`, ephemeral: false })
 	}
 	console.log(messageContent)
+	console.log(message)
 })
 
 client.login(botSecretToken);
